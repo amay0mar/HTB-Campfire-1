@@ -23,32 +23,56 @@ The HackTheBox Sherlock (Campfire-1) machine simulates a real-world investigatio
 <br/>
 
 <p align="center">
-<h3>Part One (Install & setting up VMs:</h3>
-Installing Ubuntu: <br/>
-We need to take a few steps to set our static IP address for this VM.<br/>
+<h3>Q1: Analyzing Domain Controller Security Logs, can you confirm the date & time when the kerberoasting activity occurred?
+<br/>
+</h1>Based on the question we know it has something to do with Kerberos. Now let us see if there is any event code associated with Kerberos. <br/>
+Upon looking we found that event code 4769 pertains to Kerberos service ticket was requested, we can use that now on our index.<br/>
+Now we can go and add "EventCode=4769" by clicking "event code" and then "4769" located on the left hand side of the result window. <br/>
+Inspecting the first on the list we can see the highlighted on the message section saying "kerberos ticket was requested.<br/>
+We can add a new query pertaining to Service name as shown in the screenshot. Once outpur has been returned we can inspect the first result. <br/>
+Inspecting the event, I can see that the Ticket encryption type is "0x17" which is a weak encryption. We can safely say that this is a potential for a kerberos ticket attack and we can try and proceed to answer the question using the time found in this event. </br>
 <br />
-<img src="https://i.imgur.com/nl6DEQ6.png"/>
+<img src="https://i.imgur.com/l2eAMZy.png"/>
 <br />
-<br />
-Finding out the gateway IP of your VMware workstation NAT network:  <br/>
-VMware workstation > click Edit menu on top > Click "Virtual Network Editor" > Select Type : "NAT" network > and click "NAT Settings" > make sure to take down the Gateway address IP and Subnet mask <br/>
-<br />
-<img src="https://i.imgur.com/BwFP3Er.png"/>
-<br />
-<br />
-Now back to Ubuntu Installer we are going to change the interface from DHCPv4 to Manual or static: <br/>
-Now got back to Network Connections > drop down to "ens33 eth" and select "edit IPv4" > after that select "Manual" > now a window has appeared and just plug in the required IP from our previous steps <br/>
-<br />
-<img src="https://i.imgur.com/9JN0v2l.png"/>
+<img src="https://i.imgur.com/Hf8m1JB.png"/>
 <br />
 <br />
-Continue to Install Ubuntu:  <br/>
-Once Static IP has been set > continue to next installer > Make sure to set memorable username/password > Next step "Install OpenSSH server" > then continue isntalling OS until "Install Complete" and hit "reboot now" <br/>
+<h3>Q2: What is the Service Name that was targeted?</h3>  <br/>
+</h1>For this one we can just go back to the event and look through the "service name" <br/>
 <br />
-<img src="https://i.imgur.com/EtZPCjM.png"/>
+<img src="https://i.imgur.com/jNCUwk9.png"/>
 <br />
 <br />
-Installation and Reboot complete:  <br/>
-After reboot now we make sure DNS and outbound pings are working > make sure to login in with the your credentials > type in "ping -c 2 google.com" > looks like we pinged right now we are all set for our ubuntu server <br/>
+<h3>Q3:It is really important to identify the Workstation from which this activity occurred. What is the IP Address of the workstation?</h3> <br/>
+</h1>Now this one is a quick one too. We go back inspect the event output again and look for the "Client Address" section. <br/>
+<br />
+<img src="https://i.imgur.com/Zu5Vwyj.png"/>
+<br />
+<br />
+</h3>Q4:Now that we have identified the workstation, a triage including PowerShell logs and Prefetch files are provided to you for some deeper insights so we can understand how this activity occurred on the endpoint. What is the name of the file used to Enumerate Active directory objects and possibly find Kerberoastable accounts in the network? <br/>
+</h1>For this one we have to step back and go back to query some data. Since this question points to the Powershell logs and prefetch files, we can go back to our original query and delete "event code" and "source name". Now on the left hand side panel we can click "source type" and click through the one that says "powershel-operational.evtx" I think the next best step is to filter for any execution commands. When you look into powershell execution event code "4104" shows up. So we can query that also. After querying the event code we can go through the top event. Upon inspecting we can see the Path section mentioning about "powerview.ps1" upon investigating PowerView is a powershell to gain network situational awareness on windows domain. So this might be the file we are hunting for the answer. <br/>
+<br />
+<img src="https://i.imgur.com/A8OtAKP.png"/>
+<br />
+<img src="https://i.imgur.com/z0VDwf5.png"/>
+<br />
+<br />
+</h3>Q5:When was this script executed?  <br/>
+<h1>For this question we can add "PowerView.ps1" on our query search. For when it was first executed we go the the very last event on our list and enter the time and date. <br/>
+<br />
+<br />
+</h3>Q5:What is the full path of the tool used to perform the actual kerberoasting attack?
+<h1/>
+<br />
 <br />
 <img src="https://i.imgur.com/0pTReUk.png"/>
+<br />
+<br />
+</h3>Q6:When was the tool executed to dump credentials?
+<h1/>
+<br />
+<br />
+<img src="https://i.imgur.com/0pTReUk.png"/>
+<br />
+<br />
+
